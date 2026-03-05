@@ -92,6 +92,7 @@ Este nombre refleja dos características fundamentales:
 
 La siguiente estructura de carpetas es la base del proyecto. Cada carpeta y archivo tiene un propósito definido.
 
+```text
 pandora-frontend/
 ├── 📄 .env.example # Variables de entorno de ejemplo
 ├── 📄 .eslintrc.json # Configuración de ESLint
@@ -239,6 +240,7 @@ pandora-frontend/
 ├── 📄 middleware.ts # Middleware de Next.js para protección de rutas
 │
 └── 📄 providers.tsx # Proveedores globales (ThemeProvider, AuthProvider, QueryClientProvider)
+```
 
 
 ---
@@ -247,6 +249,7 @@ pandora-frontend/
 
 Dentro de cada módulo de negocio (por ejemplo `billing`, `accounting`, `rrhh`, etc.), el código se organiza en **cuatro capas** bien definidas. Cada capa tiene una responsabilidad única y se comunica con las demás de forma controlada.
 
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │ PÁGINA (app/) │
 │ (orquesta hooks y componentes) │
@@ -278,8 +281,7 @@ Dentro de cada módulo de negocio (por ejemplo `billing`, `accounting`, `rrhh`, 
 │ - Componentes React "tontos" │
 │ - Reciben datos y callbacks │
 └─────────────────────────────────────┘
-
-
+```
 
 **Flujo de datos:**
 
@@ -314,7 +316,7 @@ Con 108 tablas en la base de datos, la estrategia es:
 
 **Ejemplo para el módulo de facturación:**
 
-
+```text
 modules/billing/
 ├── types/
 │ ├── invoice.types.ts
@@ -335,7 +337,7 @@ modules/billing/
 ├── InvoiceForm/
 ├── ReceivableTable/
 └── CollectionModal/
-
+```
 
 ---
 
