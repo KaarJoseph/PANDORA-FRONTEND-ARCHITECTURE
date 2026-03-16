@@ -59,7 +59,7 @@ El sistema genera automáticamente una **contraseña temporal**.
 
 # 🔑 3. Flujo de Onboarding (Primer Inicio de Sesión)
 
-Cuando el usuario ingresa **por primera vez** con su **clave temporal**, el sistema activa un **asistente de configuración**.
+Cuando el usuario ingresa **por primera vez** con su **clave**, el sistema activa un **asistente de configuración**.
 
 ---
 
@@ -92,12 +92,6 @@ Tras completar la **legalización y datos de perfil**, el sistema **desbloquea e
 # 💳 4. Gestión de Pagos y Suspensión
 
 Para mantener el sistema **activo**, el cliente debe **gestionar su vigencia**.
-
----
-
-## 📤 Carga de Comprobante
-
-Existe un apartado donde el cliente **sube su comprobante de pago** para **validación manual de nuestra parte**.
 
 ---
 
@@ -166,7 +160,9 @@ Ejemplo:
 
 Al crear un operativo, solo se requiere:
 
-📧 **Email**
+1. **Asignación manual del Tipo de Operativo**
+2. **Email** (Identificador para envío de credenciales automáticas).
+3. **Asignación de Permisos** (Checks de módulos).
 
 ---
 
@@ -190,7 +186,7 @@ El **Administrador** puede habilitar **ventanas adicionales** mediante **Checks 
 
 ## 🔒 Seguridad
 
-La **contraseña temporal debe ser cambiada obligatoriamente** tras el **primer login exitoso**.
+La **contraseña podrá ser cambiada despues** tras la **configuración de la empresa**.
 
 ---
 
@@ -209,7 +205,7 @@ Todos los planes cuentan con **facturación electrónica ilimitada**.
 🏢 Crea Empresa + Admin
       │
       ▼
-⚙️ Sistema genera contraseña temporal
+⚙️ Sistema genera contraseña
       │
       ▼
 📧 Usuario recibe correo
