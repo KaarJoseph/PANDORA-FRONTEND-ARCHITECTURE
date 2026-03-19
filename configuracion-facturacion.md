@@ -9,7 +9,7 @@ Este documento define la configuración necesaria para la empresa dentro del sis
 | RUC | String | Identificador tributario único |
 | Razón Social | String | Nombre legal registrado en el SRI |
 | Nombre Comercial | String | Nombre comercial de la empresa |
-| **Logo** | **Image/File** | **Imagen corporativa (opcional, para plantillas)** |
+| **Logo** | **url** | **Imagen corporativa (opcional, para plantillas)** |
 | Número de Establecimientos | String | Formato: 001, 002, etc. |
 | Matriz (opcional) | String | Indica la dirección de la matriz |
 | Obligado a llevar contabilidad | Boolean | true = Sí, false = No |
