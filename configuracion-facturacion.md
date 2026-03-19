@@ -10,7 +10,7 @@ Este documento define la configuración necesaria para la empresa dentro del sis
 | Razón Social | String | Nombre legal registrado en el SRI |
 | Nombre Comercial | String | Nombre comercial de la empresa |
 | Número de Establecimientos | String | Formato: 001, 002, etc. |
-| Matriz (opcional) | Boolean | Indica si corresponde a la matriz |
+| Matriz (opcional) | String | Indica la dirección de la matriz |
 | Obligado a llevar contabilidad | Boolean | true = Sí, false = No |
 
 💡 *Este bloque permite estructurar la empresa y soportar sucursales a futuro.*
