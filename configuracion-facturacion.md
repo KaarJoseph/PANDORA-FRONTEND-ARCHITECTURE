@@ -11,7 +11,7 @@ Este documento define la configuración necesaria para la empresa dentro del sis
 | Nombre Comercial | String | Nombre comercial de la empresa |
 | **Logo** | **String** | **Imagen corporativa (opcional, para plantillas)** |
 | Número de Establecimientos | String | Formato: 001, 002, etc. |
-| Matriz (opcional) | String | Indica la dirección de la matriz |
+| Matriz (opcional) | Boolean | Indica si la ubicación es la matriz |
 | Obligado a llevar contabilidad | Boolean | true = Sí, false = No |
 
 💡 *Este bloque permite estructurar la empresa y soportar sucursales a futuro.*
