@@ -1,133 +1,118 @@
-# Backend PANDORA — cambios y mejoras 
+# 🚀 Backend PANDORA — Cambios y Mejoras Técnicas
+
+Documento de alineación para la gestión de jerarquías, multi-tenancy y configuración de módulos.
 
 ---
 
-## 1. Arquitectura de base de datos y lógica de Super Admin
+## 1. 🔑 Arquitectura de Base de Datos y Lógica de Super Admin
 
-Cambios para gestión de usuarios de alto nivel y creación de Super Admin: jerarquía de privilegios y **DTO de inicialización**.
+Refactorización para la gestión de usuarios de alto nivel y **DTO de inicialización**.
 
-### 1.1 `createSuperAdmin` — parámetros de entrada
-
-Refactorizar el alta de Super Admins: solo identidad y vínculo empresarial.
+### 1.1 `createSuperAdmin` — Parámetros de entrada
+Se simplifica el alta: solo identidad y vínculo empresarial primario.
 
 | Parámetro | Obligatorio | Notas |
-|-----------|-------------|--------|
-| `email` | Sí | Acceso único |
-| `password` | Sí | Persistir solo hash |
-| `razonSocialId` / `razon_social_id` | Sí | Vinculación a la razón social (entidad legal) |
+|-----------|:-----------:|-------|
+| `email` | ✅ Sí | Identificador único de acceso. |
+| `password` | ✅ Sí | Persistir únicamente el Hash. |
+| `razon_social_id` | ✅ Sí | Vinculación a la entidad legal (Razón Social). |
 
-**Cambio en backend:** `POST /users/super-admin` acepta únicamente esos campos; nombre/apellido vía `PATCH /users/profile/complete` u otro flujo posterior si aplica.
-
----
-
-## 2. Jerarquía de creación de usuarios
-
-| Actor | Puede crear | Restricción |
-|-------|-------------|-------------|
-| `SUPER_ADMIN` | Otros `SUPER_ADMIN` | Según reglas de la empresa propietaria / grupo |
-| `SUPER_ADMIN` | `ADMIN_EMPRESA` | Cualquier empresa (propia y clientes) |
-| `SUPER_ADMIN` | `OPERATIVO` | Solo tenant de la **empresa propietaria** |
-| `ADMIN_EMPRESA` | `ADMIN_EMPRESA` y `OPERATIVO` | Solo usuarios de **su** tenant |
-
-**Cambio en backend:** validar en servicio/guards en `POST /users/admin`, `/users/operario`, `/users/super-admin`.
+> [!IMPORTANT]
+> **Cambio en Backend:** El endpoint `POST /users/super-admin` solo debe procesar estos 3 campos. Los datos personales (nombre/apellido) se gestionarán mediante `PATCH /users/profile/complete`.
 
 ---
 
-## 3. Planes comerciales y módulos del menú
+## 2. 👥 Jerarquía de Creación de Usuarios
 
-- Cada plan define qué **módulos** incluye.
-- Una empresa puede tener **más módulos** que el plan base por contrato o **habilitación manual**: la lista efectiva = plan + extras; debe resolverse en servidor y reflejarse en login (ver §4).
-- `SUPER_ADMIN`: sin filtro de módulos en UI.
-- `ADMIN_EMPRESA`: menú filtrado por lista de módulos efectivos.
+Lógica de permisos para la creación de cuentas según el rol del solicitante:
 
-**Claves que usa el front** (`src/core/navigation/plan-modules.ts`):
+| Actor | Puede crear | Restricción / Scope |
+|-------|-------------|---------------------|
+| **SUPER_ADMIN** | Otros `SUPER_ADMIN` | Según reglas del Grupo Propietario. |
+| **SUPER_ADMIN** | `ADMIN_EMPRESA` | Cualquier empresa (propias y clientes). |
+| **SUPER_ADMIN** | `OPERATIVO` | Solo en el tenant de la **empresa propietaria**. |
+| **ADMIN_EMPRESA**| `ADMIN_EMPRESA` y `OPERATIVO` | Solo usuarios de **su propio** tenant. |
 
+---
+
+## 3. 📦 Planes Comerciales y Módulos Aditivos
+
+El sistema debe permitir una configuración flexible de "ventanas" o módulos visibles.
+
+* **Lógica Aditiva:** Los módulos visibles para una empresa son el resultado de su **Plan Base + Habilitaciones Manuales (Extras)**.
+* **Habilitación por Super Admin:** El `SUPER_ADMIN` tiene la potestad de activar módulos adicionales (upsell/ventanas extra) a cualquier empresa sin necesidad de cambiar su plan base.
+* **Filtros en UI:**
+    * `SUPER_ADMIN`: Visualiza todos los módulos (sin restricciones).
+    * `ADMIN_EMPRESA`: Menú filtrado por la lista de módulos efectivos resuelta por el servidor.
+
+**Claves de módulos (Slug):**
 `facturacion` · `ventas_pos` · `maestros` · `contabilidad` · `reportes_financieros` · `tesoreria` · `inventario` · `activos_fijos` · `rrhh` · `crm` · `estructura`
 
 ---
 
-## 4. Login / sesión — `plan_modulos`
+## 4. 🔐 Login / Sesión — `plan_modulos`
 
-**Cambio en backend:** en la respuesta de `POST /auth/login`, incluir en `empresa_actual` el array `plan_modulos` (strings anteriores). Misma lógica por ítem en `mis_empresas` al cambiar de empresa.
+**Cambio en backend:** El objeto de respuesta en `POST /auth/login` debe incluir en `empresa_actual` el array `plan_modulos` con los strings de los módulos habilitados.
 
-| Condición | Comportamiento acordado con el front |
-|-----------|--------------------------------------|
-| `plan_modulos` ausente, `null` o `[]` | El front muestra todos los módulos |
-| `plan_modulos` con valores | `ADMIN_EMPRESA` ve solo esas secciones; `SUPER_ADMIN` ignora el filtro |
-| Habilitaciones manuales / upsell | Incluidas en la lista efectiva devuelta |
-
----
-
-## 5. Configuración de empresa, logo, firma, avatar
-
-| Área | Cambio / mejora en backend |
-|------|----------------------------|
-| `PATCH /companies/:razonSocialId/config` | DTO: agregar opcionales **`nombre_comercial`**, **`direccion_matriz`**; persistir en BD (p. ej. `razones_sociales`; sincronizar `tenants` si corresponde). |
-| `PATCH /companies/:razonSocialId/logo` | Multipart campo `logo`; respuesta con URL o datos para refrescar UI. |
-| Firma electrónica | `POST /electronic-signatures/upload-file`, `DELETE /electronic-signatures/current/:razonSocialId` alineados con payloads del front. |
-| Perfil usuario | `PATCH /users/profile/complete`; login/JWT con datos necesarios para avatar y perfil. |
+| Condición | Comportamiento en Front-end |
+|-----------|-----------------------------|
+| Array ausente, `null` o `[]` | Se muestran todos los módulos por defecto. |
+| Array con valores | El usuario ve **solo** los módulos listados. |
+| Super Admin | Ignora el filtro y ve todo. |
 
 ---
 
-## 6. Empresas (tenant) — estado y baja
+## 5. 🏢 Configuración de Empresa, Logo y Firma
 
-| Ruta | Método | Body / uso | Estado en front |
-|------|--------|------------|-----------------|
-| `/tenants/:tenantId/estado` | PATCH | `{ "estado": "activo" \| "inactivo" }` | Pantalla Empresas: toggle activo/inactivo |
-| `/tenants/:tenantId` | DELETE | — | Pantalla Empresas: eliminar tras confirmación texto `ELIMINAR` |
-
-**Implementar** ambas o documentar alternativa equivalente. Sin implementación → **404** en UI.
-
----
-
-## 7. Usuarios — estado y baja
-
-| Ruta | Método | Body / uso | Estado en front |
-|------|--------|------------|-----------------|
-| `/users/:userId` | PATCH | `{ "esta_activo": boolean }` (y otros campos editables si los exponéis) | Usuarios globales: activar/desactivar |
-| `/users/:userId` | DELETE | — | Usuarios globales: eliminar tras confirmación |
-
-**Implementar** PATCH para `esta_activo` como mínimo; DELETE según política de borrado lógico/físico. Sin rutas → **404**.
+| Área | Cambio / Mejora Requerida |
+|------|---------------------------|
+| **Configuración** | `PATCH /companies/:razonSocialId/config`: Agregar `nombre_comercial` y `direccion_matriz`. |
+| **Branding** | `PATCH /companies/:razonSocialId/logo`: Gestión de Multipart para el logo de la empresa. |
+| **Firma Electrónica**| `POST /electronic-signatures/upload-file`: Vinculación de archivos `.p12` o certificados. |
+| **Perfil** | `PATCH /users/profile/complete`: Para que el usuario final complete sus datos tras el alta. |
 
 ---
 
-## 8. Suscripción del tenant
+## 6. 🏢 Gestión de Tenants (Empresas) — Estado y Baja
 
-| Ruta | Método | Body |
-|------|--------|------|
-| `/tenants/:tenantId/subscription/plan` | PATCH | `{ "plan_id": "uuid" }` |
-| `/tenants/:tenantId/subscription/vigencia` | PATCH | fechas inicio/fin; modalidad si aplica |
+Endpoints críticos para la administración de empresas clientes.
 
-Alta/edición de empresa en front ya invoca estas rutas; deben existir o sustituirse por rutas equivalentes documentadas.
-
----
-
-## 9. Respuestas de listados
-
-**Cambio:** `GET /users` debe devolver **`es_admin_principal`** cuando exista en BD. Relaciones tenant / razón social completas para listados sin celdas vacías.
+| Ruta | Método | Acción | Notas |
+|------|:------:|--------|-------|
+| `/tenants/:id/estado` | `PATCH` | Activar / Inactivar | Bloquea el acceso a todos los usuarios de ese tenant. |
+| `/tenants/:id` | `DELETE`| Eliminar | Se recomienda **Borrado Lógico** (Soft Delete) para trazabilidad legal. |
 
 ---
 
-## 10. Cobertura actual Front vs trabajo Backend
+## 7. 👤 Gestión de Usuarios — Estado y Baja
 
-| Módulo UI | Integración |
-|-----------|-------------|
-| Gestión global (empresas, usuarios, planes, dashboard, tipos operativo) | Parcial: faltan endpoints/DTOs de §5–§9; tipos operativo pueden depender de storage local hasta API dedicada. |
-| Mi empresa | Listados usuarios/operarios; alinear permisos con §2. |
-| Perfil (mi perfil, configuración empresa, contraseña) | Depende de §5 y sesión. |
-| Resto del menú lateral (facturación, tesorería, inventario, RRHH, CRM, contabilidad, POS, etc.) | Mayoría **solo layout / título**; requiere APIs por dominio en fases posteriores. |
+| Ruta | Método | Acción | Notas |
+|------|:------:|--------|-------|
+| `/users/:id` | `PATCH` | Cambiar `esta_activo` | Permite suspender usuarios individualmente sin borrarlos. |
+| `/users/:id` | `DELETE`| Eliminar usuario | Validar que no sea el único Admin de una empresa activa. |
 
 ---
 
-## 11. Checklist de implementación
+## 8. 📅 Suscripción del Tenant
 
-- [ ] `POST /users/super-admin` → solo `email`, `password`, `razon_social_id`
-- [ ] `PATCH /tenants/:id/estado`
-- [ ] `DELETE /tenants/:id` (o equivalente con reglas definidas)
-- [ ] `PATCH /users/:id` con `esta_activo`
-- [ ] `DELETE /users/:id` (o política única de baja)
-- [ ] `PATCH /tenants/:id/subscription/plan` y `.../vigencia`
-- [ ] DTO `PATCH .../companies/.../config` → `nombre_comercial`, `direccion_matriz`
-- [ ] Login → `empresa_actual.plan_modulos` (+ `mis_empresas` coherente)
-- [ ] `GET /users` → `es_admin_principal` + relaciones completas
-- [ ] Guards §2 en altas de usuario
+Configuración de la vigencia y el nivel de servicio.
+
+* `PATCH /tenants/:id/subscription/plan`: Cambia el `plan_id` (UUID).
+* `PATCH /tenants/:id/subscription/vigencia`: Actualiza fechas de inicio y fin de contrato.
+
+---
+
+## 9. 📊 Listados y Reportes
+
+* **`GET /users`**: Debe retornar obligatoriamente el booleano `es_admin_principal` y el objeto de relación con la Razón Social completo (evitar celdas vacías en la tabla).
+
+---
+
+## 10. ✅ Checklist de Implementación Final
+
+- [ ] **Auth:** Inyectar `plan_modulos` en el payload de login (calculando Plan + Extras).
+- [ ] **Empresas:** Implementar toggle de estado (activo/inactivo) y borrado lógico.
+- [ ] **Módulos:** Endpoint para que el Super Admin habilite "ventanas" (módulos) manuales por empresa.
+- [ ] **Usuarios:** Implementar DTO reducido para `createSuperAdmin`.
+- [ ] **Config:** Soportar `nombre_comercial` y `direccion_matriz` en la tabla de razones sociales.
+- [ ] **Seguridad:** Aplicar Guards de jerarquía según la tabla de la Sección 2.
