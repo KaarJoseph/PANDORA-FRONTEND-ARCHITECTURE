@@ -1,5 +1,4 @@
 # 📋 Solicitud unificada Backend — PANDORA
-
 ---
 
 ## 📑 Índice
