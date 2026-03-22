@@ -4,7 +4,7 @@
 
 ## 1. Arquitectura de base de datos y lógica de Super Admin
 
-Cambios para gestión de usuarios de alto nivel y creación de Super Admin: jerarquía de privilegios y **DTO de inicialización reducido**.
+Cambios para gestión de usuarios de alto nivel y creación de Super Admin: jerarquía de privilegios y **DTO de inicialización**.
 
 ### 1.1 `createSuperAdmin` — parámetros de entrada
 
