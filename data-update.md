@@ -1,6 +1,4 @@
-# 📌 Solicitud backend PANDORA (desde el código del Front)
-
-Lista de trabajo para backend: qué **crear**, qué **tocar en DTOs** y dónde el front **ya tiene botones** pero el servidor responde **404**. Basado en `tenantService`, `globalUserService`, pantallas de gestión global y perfil.
+# 📌 Solicitud backend PANDORA
 
 ---
 
