@@ -1,7 +1,4 @@
-# 📋 Solicitud unificada Backend — PANDORA (referencia Frontend)
-
-> **Un solo documento** para GitHub: todo lo pendiente o esperado desde el **frontend**, organizado por flujo.  
-> Código de referencia: `src/modules/**/services`, `src/core/config/axios.ts`, `src/core/navigation/plan-modules.ts`.
+# 📋 Solicitud unificada Backend — PANDORA
 
 ---
 
