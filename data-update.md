@@ -1,7 +1,5 @@
 # 📋 Backend — solicitudes PANDORA (desde Front)
 
-Documento corto para el equipo backend: **qué hacer**, **qué cambiar** y **jerarquía de negocio**. Referencia código front: `src/modules/**/services`, `src/core/navigation/plan-modules.ts`.
-
 ---
 
 ## 🏛️ Arquitectura y Super Admin
