@@ -1,218 +1,120 @@
-# 📋 Solicitud unificada Backend — PANDORA
----
+# 📋 Backend — solicitudes PANDORA (desde Front)
 
-## 📑 Índice
-
-1. [Actualizaciones de arquitectura y lógica de Super Admin](#-actualizaciones-de-arquitectura-de-base-de-datos-y-lógica-de-super-admin) *(texto base del producto)*
-2. [Jerarquía: quién crea a quién](#-jerarquía-de-usuarios-quién-crea-a-quién)
-3. [Planes comerciales y módulos del menú](#-planes-comerciales-y-módulos-del-menú)
-4. [Configuración de empresa, avatar y logo](#-configuración-de-empresa-avatar-y-logo)
-5. [Sesión y `plan_modulos`](#-sesión--login-y-plan_modulos)
-6. [Catálogo de endpoints consumidos por el front](#-catálogo-de-endpoints-consumidos-por-el-front)
-7. [RBAC vs módulos de plan](#-rbac-fino-vs-módulos-de-plan)
-8. [Resumen ejecutivo para backlog](#-resumen-ejecutivo-para-backlog)
+Documento corto para el equipo backend: **qué hacer**, **qué cambiar** y **jerarquía de negocio**. Referencia código front: `src/modules/**/services`, `src/core/navigation/plan-modules.ts`.
 
 ---
 
-## 🏛️ Actualizaciones de Arquitectura de Base de Datos y Lógica de Super Admin
+## 🏛️ Arquitectura y Super Admin
 
-Este documento detalla los cambios necesarios para la gestión de usuarios de alto nivel y la creación de la entidad **Super Admin**, enfocándose en la **jerarquía de privilegios** y la **simplificación de parámetros de inicialización**.
+Cambios para usuarios de alto nivel y entidad **Super Admin**: jerarquía de privilegios y **DTO de creación reducido**.
 
-### 1️⃣ Actualización de parámetros: `createSuperAdmin`
+### `createSuperAdmin` — parámetros requeridos
 
-Se debe refactorizar el método de creación de Super Admins para que sea **más conciso**. La estructura de datos de entrada (DTO) ahora se limitará estrictamente a la **identidad** y la **vinculación empresarial básica**.
+| Campo | Rol |
+|--------|-----|
+| **email** | Acceso único |
+| **password** | Hash en servidor antes de guardar |
+| **razonSocialId** | Vincular a la razón social (API: `razon_social_id`) |
 
-#### ✅ Nuevos parámetros requeridos
-
-| Campo | Descripción |
-|--------|-------------|
-| **email** | Identificador único de acceso. |
-| **password** | Credencial de autenticación *(debe ser **hasheada** antes de la persistencia)*. |
-| **razonSocialId** | Vinculación obligatoria con la entidad legal / empresa correspondiente *(en API REST suele exponerse como `razon_social_id`)*. |
-
-> 🔧 **Nota técnica:** el frontend envía `email`, `password`, `razon_social_id` en `POST /users/super-admin`. No envía nombre/apellido en el alta; el perfil puede completarse después con `PATCH /users/profile/complete` o flujo equivalente.
+**Backend:** refactorizar `POST /users/super-admin` para aceptar **solo** esos campos (quitar obligatoriedad de nombre/apellido en el alta; el perfil se completa después si aplica).
 
 ---
 
-## 👥 Jerarquía de usuarios: quién crea a quién
+## 👥 Quién crea a quién
 
-Estas reglas deben reflejarse en **permisos de API** y, si aplica, en **constraints** de base de datos.
+| Rol | Crea | Alcance |
+|-----|------|---------|
+| **SUPER_ADMIN** | Otros Super Admins | Empresa propietaria / marco acordado |
+| **SUPER_ADMIN** | Admins de empresa | Propia organización **y** empresas cliente |
+| **SUPER_ADMIN** | Operativos | **Solo** de la **empresa propietaria** |
+| **ADMIN_EMPRESA** | Otros admins y operativos | **Solo** su empresa (su tenant) |
 
-| Rol | Qué puede crear | Alcance |
-|-----|------------------|---------|
-| 🌐 **SUPER_ADMIN** | Otros **Super Administradores** | Solo dentro del marco acordado (p. ej. vinculados a la **empresa propietaria** / razón social del grupo). |
-| 🌐 **SUPER_ADMIN** | **Administradores de empresa** | Tanto para **su propia organización** como para **otras empresas (clientes)** que gestiona el grupo: son los tenants que comercialmente dependen de él. |
-| 🏢 **ADMIN_EMPRESA** | **Operativos** | **Solo** operativos de **su** empresa (su **tenant** actual). |
-| 🏢 **ADMIN_EMPRESA** | **Otros administradores** | **Solo** administradores de **su** empresa (mismo tenant), no de otras compañías. |
-
-> 💡 **Idea clave:** el Super Admin “atiende” al ecosistema completo (propios + clientes); el administrador de una empresa cliente solo administra **su** compañía (usuarios internos: admins y operativos).
+**Backend:** reglas en guards / servicios de `POST /users/*` coherentes con la tabla.
 
 ---
 
-## 📦 Planes comerciales y módulos del menú
+## 📦 Planes y ventanas del menú
 
-- Cada **plan** debe definir (o poder asociar) un conjunto de **módulos** habilitados.
-- Una empresa puede **contratar más módulos** o recibir **habilitación manual** (fuera del catálogo estándar): eso debe **fusionarse** en la lista efectiva que ve el usuario (suscripción + overrides contractuales).
-- El **Super Admin** **no** se limita por plan en la UI: ve **todos** los módulos de navegación.
-- El **Administrador de empresa** ve solo los módulos incluidos en su **plan efectivo** (ver `plan_modulos` más abajo).
+- Las **ventanas** del administrador de empresa **dependen del plan** y de la **empresa**: si contratan más alcance o se **habilita manualmente** más módulos, la lista efectiva debe reflejarlo (plan + extras acordados).
+- **SUPER_ADMIN** ve todo el menú (sin filtrar por plan).
+- **ADMIN_EMPRESA** se filtra según módulos efectivos (ver `plan_modulos`).
 
-**Claves canónicas** alineadas con `src/core/navigation/plan-modules.ts`:
+**Claves de módulo** (menú lateral en front):
 
-| Clave | Contenido aproximado del menú |
-|--------|-------------------------------|
-| `facturacion` | Facturación electrónica (facturas, notas, retenciones, guías, etc.) |
-| `ventas_pos` | Punto de venta, mis ventas, cobros diarios, cierre de caja (`/ventas-pos/*`) |
+| Clave | Área |
+|--------|------|
+| `facturacion` | Facturación |
+| `ventas_pos` | POS / ventas |
 | `maestros` | Personas, productos, categorías |
-| `contabilidad` | Plan de cuentas, asientos, centros de costo, proyectos, periodos |
-| `reportes_financieros` | Balance, estado de resultados, libro mayor, flujo de efectivo |
-| `tesoreria` | Bancos, cuentas, cajas, CxC, CxP, cobros, pagos, conciliaciones |
-| `inventario` | Bodegas, kardex, movimientos |
-| `activos_fijos` | Activos y depreciaciones |
-| `rrhh` | Empleados, nóminas, asistencias, préstamos, vacaciones |
-| `crm` | Cotizaciones, proformas |
-| `estructura` | Establecimientos, puntos de emisión, secuenciales, rangos autorizados |
+| `contabilidad` | Contabilidad |
+| `reportes_financieros` | Reportes |
+| `tesoreria` | Tesorería |
+| `inventario` | Inventario |
+| `activos_fijos` | Activos fijos |
+| `rrhh` | RRHH |
+| `crm` | CRM / preventa |
+| `estructura` | Establecimientos, emisión, secuenciales |
+
+Planes en BD deben poder asociar un subconjunto de estas claves; los extras manuales se **suman** a la lista que resuelve el login.
 
 ---
 
-## 🏢 Configuración de empresa, avatar y logo
+## 🏢 Config empresa · avatar · logo
 
-### 📝 Campos de configuración (`PATCH /companies/:razonSocialId/config`)
+**Cambios backend (no narración de “hoy pasa X”):**
 
-La pantalla de **configuración de empresa** en el perfil permite capturar, entre otros, **nombre comercial** y **dirección matriz**.
-
-- ⚠️ Hoy el **DTO del backend** puede **no incluir** `nombre_comercial` ni `direccion_matriz` en el validador, por lo que **se descartan** al guardar.
-- ✅ **Pendiente backend:** añadir como **opcionales** `nombre_comercial` y `direccion_matriz` al DTO y persistirlos en **`razones_sociales`** (y, si aplica, sincronizar `tenants.nombre_comercial`).
-- **Hasta entonces:** el front puede mantener un **snapshot local** (`localStorage`) tras guardar el resto de campos, pero la **fuente de verdad** debe ser el servidor.
-
-### 🖼️ Avatar y logo
-
-- El **perfil de usuario** (avatar, datos personales) se alinea con **`PATCH /users/profile/complete`** y la sesión extendida en NextAuth.
-- El **logo de la empresa** usa **`PATCH /companies/:razonSocialId/logo`** (multipart).
-- Cualquier **URL de avatar/logo** devuelta en login o GET de usuario debe ser **estable** y respetar **CORS** si se sirve desde otro dominio.
+1. **`PATCH /companies/:razonSocialId/config`** — DTO: agregar opcionales **`nombre_comercial`**, **`direccion_matriz`**; persistir en **`razones_sociales`** (y sincronizar `tenants` si aplica).
+2. **`PATCH /companies/:razonSocialId/logo`** — multipart; validar que la respuesta permita al front mostrar el logo.
+3. **Perfil usuario** — `PATCH /users/profile/complete` + campos en sesión para avatar/datos; URLs estables y accesibles (CORS si aplica).
 
 ---
 
-## 🔐 Sesión / login y `plan_modulos`
+## 🔐 Login / sesión y `plan_modulos`
 
-Para que el **administrador de empresa** vea solo las **ventanas contratadas**, el backend debe exponer los **módulos** del tenant actual.
+**Qué debe hacer el backend**
 
-### Ejemplo sugerido dentro de `POST /auth/login`
-
-```json
-"empresa_actual": {
-  "tenant_id": "...",
-  "tenant_slug": "...",
-  "nombre": "...",
-  "razon_social_id": "...",
-  "logo_url": null,
-  "plan_modulos": [
-    "facturacion",
-    "ventas_pos",
-    "maestros",
-    "contabilidad",
-    "reportes_financieros",
-    "tesoreria",
-    "inventario",
-    "activos_fijos",
-    "rrhh",
-    "crm",
-    "estructura"
-  ]
-}
-```
-
-### Reglas acordadas con el frontend
-
-| Situación | Comportamiento en UI |
-|-----------|----------------------|
-| `plan_modulos` **no viene**, es `null` o **array vacío** | Se muestran **todos** los módulos (modo transición / compatibilidad). |
-| `plan_modulos` con **valores** | Solo se muestran secciones que coincidan *(solo aplica a `ADMIN_EMPRESA`; `SUPER_ADMIN` **ignora** el filtro)*. |
-| **Overrides** contractuales (más módulos que el plan base) | Deben **mezclarse** en la lista efectiva que devuelve login o el servicio de suscripción. |
-
-📎 Tipos: `LoginResponse` en `src/modules/auth/types/auth.types.ts` (`empresa_actual.plan_modulos?`, `mis_empresas[].plan_modulos?`).
+- Incluir en **`empresa_actual`** el array **`plan_modulos`** (strings de la tabla de arriba). Mismo criterio al listar **`mis_empresas`** si el usuario cambia de empresa.
+- **Reglas que usa el front:**
+  - Sin `plan_modulos`, `null` o `[]` → muestra todos los módulos (transición).
+  - Con valores → el **admin de empresa** solo ve esas secciones; **super admin** ignora el filtro.
+  - Overrides contractuales → deben entrar en la lista **ya resuelta** que devuelve el login.
 
 ---
 
-## 📡 Catálogo de endpoints consumidos por el front
+## 🛠️ Qué crear, qué modificar (interés backend)
 
-Base URL: la configurada en `NEXT_PUBLIC_API_URL` / `axios`.
+### DTOs / validación
 
-### 🔑 Autenticación
+| Qué | Acción |
+|-----|--------|
+| `PatchCompanyConfigDto` (o equivalente) | Añadir **`nombre_comercial`**, **`direccion_matriz`** opcionales; aplicar en servicio/Prisma. |
+| Body `POST /users/super-admin` | Solo **`email`**, **`password`**, **`razon_social_id`**. |
+| Respuesta `POST /auth/login` | Añadir **`plan_modulos`** en `empresa_actual` (y coherente en `mis_empresas` si aplica). |
 
-| Método | Ruta |
-|--------|------|
-| POST | `/auth/login` |
-| POST | `/auth/forgot-password` |
-| POST | `/auth/reset-password` |
+### Endpoints a tener listos o a cerrar contrato
 
-### 👤 Usuarios y perfiles
+| Ruta | Nota |
+|------|------|
+| `PATCH /tenants/:id/subscription/plan` | Body `{ plan_id }`; coherente con planes ↔ módulos |
+| `PATCH /tenants/:id/subscription/vigencia` | Fechas / modalidad de suscripción |
+| `PATCH /tenants/:id/estado` | Activo / inactivo (si el front ya lo llama) |
+| `DELETE /tenants/:id` | Baja tenant (si aplica) |
 
-| Método | Ruta |
-|--------|------|
-| GET | `/users` |
-| POST | `/users/super-admin` |
-| POST | `/users/admin` |
-| POST | `/users/operario` |
-| GET | `/users/admin` |
-| GET | `/users/operarios` |
-| PATCH | `/users/profile/complete` |
-| PATCH | `/users/:id` |
-| DELETE | `/users/:id` |
-
-### 🏭 Empresas, tenants y suscripción
-
-| Método | Ruta |
-|--------|------|
-| GET | `/companies` |
-| POST | `/companies` |
-| PATCH | `/companies/:razonSocialId/config` |
-| PATCH | `/companies/:razonSocialId/logo` |
-| PATCH | `/tenants/:tenantId/estado` |
-| DELETE | `/tenants/:tenantId` |
-| PATCH | `/tenants/:tenantId/subscription/plan` |
-| PATCH | `/tenants/:tenantId/subscription/vigencia` |
-
-### 💳 Planes
-
-| Método | Ruta |
-|--------|------|
-| GET | `/plans` |
-| GET | `/plans/:id` |
-| POST | `/plans` |
-| PATCH | `/plans/:id` |
-
-### 🏷️ Tipos operativo
-
-| Método | Ruta |
-|--------|------|
-| GET | `/tipos-operativos` |
-
-### ✍️ Firma electrónica
-
-| Método | Ruta |
-|--------|------|
-| POST | `/electronic-signatures/upload-file` |
-| DELETE | `/electronic-signatures/current/:razonSocialId` |
+*(El resto de rutas de usuarios, empresas, planes y firma electrónica: validar permisos por rol y cuerpos esperados por el front; no se listan aquí como “catálogo consumido”, sino para alinear implementación.)*
 
 ---
 
-## ⚖️ RBAC fino vs módulos de plan
+## ⚖️ Plan vs RBAC
 
-- **`plan_modulos`:** decide **qué áreas** del menú ve el **ADMIN_EMPRESA** (ventanas).
-- **RBAC / permisos** (p. ej. `rol.permisos`): pueden restringir **acciones dentro de cada pantalla**; el front puede usarlos cuando el backend los exponga de forma estable.
-- Mientras RBAC no esté unificado en todas las pantallas, el menú lateral se basa en **rol + `plan_modulos`** para administradores.
-
----
-
-## ✅ Resumen ejecutivo para backlog
-
-1. ✔️ **`POST /users/super-admin`:** DTO mínimo `email`, `password`, `razon_social_id` (hash en servidor).
-2. ✔️ **`POST /auth/login`:** incluir `empresa_actual.plan_modulos` (y coherente al cambiar empresa en `mis_empresas`).
-3. ✔️ **Planes:** mapear planes ↔ módulos; fusionar **suscripción + overrides manuales**.
-4. ✔️ **`PATCH /companies/.../config`:** opcionales `nombre_comercial`, `direccion_matriz`.
-5. ✔️ **Permisos de creación de usuarios** según jerarquía (Super Admin vs Admin de empresa).
-6. ✔️ Validar todos los endpoints anteriores (existencia, errores, autorización por rol).
+- **`plan_modulos`** = qué **bloques de menú** ve el admin de empresa.
+- **Permisos finos** (`rol.permisos`, etc.) = acciones dentro de pantallas; cuando estén estables, el front puede usarlos.
 
 ---
 
-*Documento único sustituye a versiones anteriores fragmentadas; mantener este archivo como fuente de verdad para solicitudes al backend desde el frontend PANDORA.*
+## ✅ Checklist rápido
+
+- [ ] `POST /users/super-admin` reducido a email + password + `razon_social_id`
+- [ ] Reglas de creación de usuarios (tabla jerarquía)
+- [ ] `plan_modulos` en login + fusión plan + habilitaciones manuales
+- [ ] `PATCH .../config` con nombre comercial y dirección matriz
+- [ ] Suscripción plan / vigencia operativos
