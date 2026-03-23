@@ -276,6 +276,7 @@ A continuación se presenta el esquema JSON que rige el comportamiento de los m�
     }
   }
 }
+```
 
 ## 2. Lógica de Aplicación
 
