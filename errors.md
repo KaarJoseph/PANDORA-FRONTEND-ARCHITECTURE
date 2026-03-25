@@ -6,7 +6,6 @@ Se está intentando guardar información de configuración de una empresa en el 
 
 La operación se ejecuta desde el servicio:
 - companies.service.ts
-- 
 Usando Prisma dentro de una transacción: tx.establecimientos.updateMany()
 
 ---
@@ -17,7 +16,6 @@ Se realizaron pruebas con distintos tipos de usuarios:
 
 - 🔹 **SuperAdmin Principal**
 - 🔹 **SuperAdmin Normal**
-- 🔹 **Admin de Empresa**
 
 ### 🧪 Resultados
 
