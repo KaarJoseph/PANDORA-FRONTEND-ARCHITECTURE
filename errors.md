@@ -11,9 +11,6 @@ Usando Prisma dentro de una transacción: tx.establecimientos.updateMany()
 
 ---
 
-
----
-
 ## 👤 Escenario de prueba
 
 Se realizaron pruebas con distintos tipos de usuarios:
