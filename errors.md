@@ -77,3 +77,90 @@ The column `new` does not exist in the current database.
     at async C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@nestjs\core\router\router-execution-context.js:46:28
     at async C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@nestjs\core\router\router-proxy.js:9:17
 ```
+
+
+
+## 👤 Escenario de prueba (Caso 2)
+
+- 🔹 **Administrador de otra empresa (multi-tenant)**
+
+---
+
+### 🧪 Resultados
+
+- **Administrador de otra empresa**
+  - ❌ Puede intentar editar configuración de una empresa que no le pertenece  
+  - ❌ Se ejecuta lógica en backend (no debería)  
+  - ❌ Lanza error de Prisma (`column 'new' does not exist`)  
+
+---
+
+### ⚠️ Comportamiento esperado (Caso 2)
+
+- ❌ **Administrador de otra empresa**
+  - No debería poder editar configuraciones de empresas externas  
+  - No debería ejecutar lógica de actualización  
+  - Debería recibir un error controlado (ej: `403 Forbidden`)
+
+ ```bash
+[Nest] 44472  - 25/03/2026, 10:16:16 p. m.   ERROR [ExceptionsHandler] 
+Invalid `tx.establecimientos.updateMany()` invocation in
+C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\src\modules\companies\services\companies.service.ts:1417:47
+
+  1414 }
+  1415 
+  1416 if (Object.keys(estData).length > 0) {
+→ 1417     await tx.establecimientos.updateMany(
+The column `new` does not exist in the current database.
+PrismaClientKnownRequestError: 
+Invalid `tx.establecimientos.updateMany()` invocation in
+C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\src\modules\companies\services\companies.service.ts:1417:47
+
+  1414 }
+  1415 
+  1416 if (Object.keys(estData).length > 0) {
+→ 1417     await tx.establecimientos.updateMany(
+The column `new` does not exist in the current database.
+    at zr.handleRequestError (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async a (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:808:24)
+    at async <anonymous> (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\src\modules\companies\services\companies.service.ts:1417:21)
+    at async Proxy._transactionWithCallback (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:697:18)
+    at async CompaniesService.updateCompanyConfiguration (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\src\modules\companies\services\companies.service.ts:1266:16)
+    at async C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+```
+
+---
+
+```TEXT
+ERROR LINK: tenantService.ts:35  PATCH http://localhost:3000/api/v1/companies/cd9ca234-a72a-4f63-95da-bef93483d592/config 500 (Internal Server Error)
+```
+
+## 👤 Escenario de prueba (Caso 3)
+
+- 🔹 **Gestión de Permisos Dinámicos (`permisos_overrides_json`)**
+
+---
+
+### 🧪 Resultados
+
+- **SuperAdmin Principal**
+  - ✅ Intenta habilitar módulos o "ventanas" adicionales (Permisos Overrides).
+  - ❌ **Fallo de Persistencia:** Los cambios en las ventanas extras no se guardan de forma adecuada.
+  - ❌ **Rebote de Transacción:** Al intentar registrar los permisos, la lógica se interrumpe.
+  - ❌ **Error de Prisma:** Lanza `column 'new' does not exist` al ejecutar la actualización en `establecimientos`.
+
+---
+
+### ⚠️ Comportamiento esperado (Caso 3)
+
+- ✅ **Persistencia de Overrides:** El sistema debe permitir guardar el objeto `permisos_overrides_json` para habilitar ventanas específicas sin alterar el plan base.
+- ✅ **Sincronización Dinámica:** La empresa debe ver reflejada la nueva ventana o módulo habilitado inmediatamente tras el guardado.
+- ✅ **Integridad de Datos:** La transacción de Prisma debe procesar el campo `JSONB` correctamente sin intentar mapear llaves internas como columnas de la tabla.
+
+---
+
