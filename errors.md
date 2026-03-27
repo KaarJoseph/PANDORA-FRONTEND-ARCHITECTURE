@@ -164,3 +164,67 @@ ERROR LINK: tenantService.ts:35  PATCH http://localhost:3000/api/v1/companies/cd
 
 ---
 
+### 👤 Escenario de prueba (Caso 4)
+🔹 Edición de datos de facturación con conflicto de unicidad
+
+---
+
+### 🧪 Resultados
+- ❌ No se pueden editar campos como **establecimiento (codigo_sri)** si ya existe uno igual
+- ❌ Backend lanza error de Prisma por restricción única
+- ⚠️ El frontend muestra éxito parcial pero no refleja cambios
+- ✅ El **logo de empresa sí se puede editar** (no afecta restricciones)
+
+---
+
+### 💥 Error detectado
+
+```bash
+[Nest] 11332  - 26/03/2026, 1:56:46 p. m.   ERROR [ExceptionsHandler] 
+Invalid `tx.establecimientos.update()` invocation in
+C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\src\modules\companies\services\company-configuration.service.ts:235:73
+
+  232 }
+  233 if (Object.keys(estData).length > 0) {
+  234     if (canUpdateEstablecimientos) {
+→ 235         establecimiento = await tx.establecimientos.update(
+Unique constraint failed on the fields: (`razon_social_id`, `codigo_sri`)
+PrismaClientKnownRequestError: 
+Invalid `tx.establecimientos.update()` invocation in
+C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\src\modules\companies\services\company-configuration.service.ts:235:73
+
+  232 }
+  233 if (Object.keys(estData).length > 0) {
+  234     if (canUpdateEstablecimientos) {
+→ 235         establecimiento = await tx.establecimientos.update(
+Unique constraint failed on the fields: (`razon_social_id`, `codigo_sri`)
+    at zr.handleRequestError (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at zr.handleAndLogRequestError (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runt    at zr.handleAndLogRequestError (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.handleAndLogRequestError (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prism    at zr.handleAndLogRequestError (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async a (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:808:24)
+    at async <anonymous> (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\src\modules\companies\services\company-configuration.service.ts:235:47)
+    at zr.handleAndLogRequestError (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async a (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:808:24)
+    at async <anonymous> (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\src\modules\companies\service    at zr.handleAndLogRequestError (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async a (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime    at zr.handleAndLogRequestError (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.handleAndLogRequestError (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prism    at zr.handleAndLogRequestError (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async a (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:808:24)
+    at async <anonymous> (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\src\modules\companies\services\company-configuration.service.ts:235:47)
+    at async Proxy._transactionWithCallback (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:697:18)
+    at async CompanyConfigurationService.updateCompanyConfiguration (C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\src\modules\companies\services\company-configuration.service.ts:132:16)
+    at async C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\Joseph\Documents\FSO\BACKEND\PANDORA_BACKEND\node_modules\@nestjs\core\router\router-proxy.js:9:17
+```
+
+
