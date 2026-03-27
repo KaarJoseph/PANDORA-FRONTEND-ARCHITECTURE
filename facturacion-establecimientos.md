@@ -234,7 +234,7 @@ Aquí es donde se consume la configuración previa de forma dinámica y segura.
     * El campo del **Número de Factura** (ej. `000000045`) será de solo lectura para el usuario operativo, garantizando que la secuencia incremental no se rompa por error humano.
 * **Override de Secuencia (Solo Admins):**
     * Se implementará un control de **"Ajuste de Secuencial"** protegido por permisos de Administrador.
-    *
+
 
 
 
