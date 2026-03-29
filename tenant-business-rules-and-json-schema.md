@@ -181,7 +181,7 @@ Este enfoque permite manejar los permisos de forma más granular y consistente, 
 }
 ```
 
-## 🗂️ Estructura propuesta basado en ROLES.
+  ## 🗂️ Estructura propuesta basado en PLANES.
 
 
 ```json
