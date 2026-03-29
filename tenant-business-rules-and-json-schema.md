@@ -180,3 +180,167 @@ Este enfoque permite manejar los permisos de forma más granular y consistente, 
   }
 }
 ```
+
+## 🗂️ Estructura propuesta basado en ROLES.
+
+
+```json
+
+{
+  "planes": {
+    "FACTURACION": {
+      "modulos": {
+        "ventas_pos": {
+          "punto_venta": ["ver", "abrir_caja", "cerrar_caja"],
+          "mis_ventas": ["ver", "crear"],
+          "cobros": ["ver", "registrar"],
+          "cierre_caja": ["ver"]
+        },
+        "facturacion": {
+          "facturas": ["ver", "crear", "emitir"],
+          "notas_credito": ["ver", "crear", "emitir"],
+          "notas_debito": ["ver", "crear", "emitir"],
+          "retenciones": ["ver", "crear", "emitir"],
+          "guias_remision": ["ver", "crear", "emitir"]
+        },
+        "personas": {
+          "personas": ["ver", "crear", "editar"],
+          "productos_servicios": ["ver", "crear", "editar"],
+          "categorias": ["ver", "crear"]
+        },
+        "inventario": {
+          "bodegas": ["ver"],
+          "kardex": ["ver"],
+          "movimientos": ["ver", "crear", "anular"]
+        }
+      }
+    },
+    "PANDORA": {
+      "modulos": {
+        "ventas_pos": {
+          "punto_venta": ["ver", "abrir_caja", "cerrar_caja"],
+          "mis_ventas": ["ver", "crear", "editar", "anular"],
+          "cobros": ["ver", "registrar", "anular"],
+          "cierre_caja": ["ver", "ejecutar"]
+        },
+        "facturacion": {
+          "facturas": ["ver", "crear", "editar", "anular", "emitir"],
+          "notas_credito": ["ver", "crear", "editar", "anular", "emitir"],
+          "notas_debito": ["ver", "crear", "editar", "anular", "emitir"],
+          "retenciones": ["ver", "crear", "emitir", "anular"],
+          "guias_remision": ["ver", "crear", "emitir", "anular"]
+        },
+        "personas": {
+          "personas": ["ver", "crear", "editar"],
+          "productos_servicios": ["ver", "crear", "editar"],
+          "categorias": ["ver", "crear", "editar"]
+        },
+        "contabilidad": {
+          "plan_cuentas": ["ver"],
+          "asientos_contables": ["ver"],
+          "centros_costo": ["ver"],
+          "proyectos": ["ver"],
+          "periodos_contables": ["ver"]
+        },
+        "reportes_financieros": {
+          "balance_general": ["ver"],
+          "estado_resultados": ["ver"],
+          "libro_mayor": ["ver"],
+          "flujo_efectivo": ["ver"]
+        },
+        "tesoreria": {
+          "gestion_bancaria": ["ver"],
+          "cajas": ["ver"],
+          "cxc": ["ver", "gestionar"],
+          "cxp": ["ver", "gestionar"],
+          "cobros": ["ver", "registrar", "anular"],
+          "pagos": ["ver", "registrar", "anular"],
+          "conciliaciones": ["ver", "conciliar"]
+        },
+        "inventario": {
+          "bodegas": ["ver", "crear", "editar"],
+          "kardex": ["ver"],
+          "movimientos": ["ver", "crear", "anular"]
+        },
+        "activos_fijos": {
+          "activos_fijos": ["ver"],
+          "depreciaciones": ["ver"]
+        },
+        "rrhh": {
+          "empleados": ["ver"],
+          "nominas": ["ver"],
+          "asistencias": ["ver"]
+        },
+        "crm_preventa": {
+          "cotizaciones": ["ver", "crear"],
+          "proformas": ["ver", "crear"]
+        }
+      }
+    },
+    "PANDORA_ERP": {
+      "modulos": {
+        "ventas_pos": {
+          "punto_venta": ["ver", "abrir_caja", "cerrar_caja"],
+          "mis_ventas": ["ver", "crear", "editar", "anular"],
+          "cobros": ["ver", "registrar", "anular"],
+          "cierre_caja": ["ver", "ejecutar"]
+        },
+        "facturacion": {
+          "facturas": ["ver", "crear", "editar", "anular", "emitir"],
+          "notas_credito": ["ver", "crear", "editar", "anular", "emitir"],
+          "notas_debito": ["ver", "crear", "editar", "anular", "emitir"],
+          "retenciones": ["ver", "crear", "emitir", "anular"],
+          "guias_remision": ["ver", "crear", "emitir", "anular"]
+        },
+        "personas": {
+          "personas": ["ver", "crear", "editar", "eliminar"],
+          "productos_servicios": ["ver", "crear", "editar", "eliminar"],
+          "categorias": ["ver", "crear", "editar", "eliminar"]
+        },
+        "contabilidad": {
+          "plan_cuentas": ["ver", "crear", "editar"],
+          "asientos_contables": ["ver", "crear", "editar", "anular"],
+          "centros_costo": ["ver", "crear", "editar"],
+          "proyectos": ["ver", "crear", "editar"],
+          "periodos_contables": ["ver", "abrir", "cerrar"]
+        },
+        "reportes_financieros": {
+          "balance_general": ["ver", "exportar"],
+          "estado_resultados": ["ver", "exportar"],
+          "libro_mayor": ["ver", "exportar"],
+          "flujo_efectivo": ["ver", "exportar"]
+        },
+        "tesoreria": {
+          "gestion_bancaria": ["ver", "crear", "editar"],
+          "cajas": ["ver", "crear", "editar", "cerrar"],
+          "cxc": ["ver", "gestionar"],
+          "cxp": ["ver", "gestionar"],
+          "cobros": ["ver", "registrar", "anular"],
+          "pagos": ["ver", "registrar", "anular"],
+          "conciliaciones": ["ver", "conciliar"]
+        },
+        "inventario": {
+          "bodegas": ["ver", "crear", "editar"],
+          "kardex": ["ver"],
+          "movimientos": ["ver", "crear", "anular"]
+        },
+        "activos_fijos": {
+          "activos_fijos": ["ver", "crear", "editar", "dar_baja"],
+          "depreciaciones": ["ver", "calcular"]
+        },
+        "rrhh": {
+          "empleados": ["ver", "crear", "editar"],
+          "nominas": ["ver", "generar"],
+          "asistencias": ["ver", "registrar"]
+        },
+        "crm_preventa": {
+          "cotizaciones": ["ver", "crear", "editar", "anular"],
+          "proformas": ["ver", "crear", "editar", "anular"]
+        }
+      }
+    }
+  }
+}
+```
+
+
